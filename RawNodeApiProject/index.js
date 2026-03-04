@@ -1,26 +1,29 @@
 /*
     Title : Uptime Monitoring application
-    */
+*/
 
 // dependencies
 const http = require('http');
 const { HandleReqRes } = require('./helpers/handleReqRes');
+const environment = require('./helpers/environment');
+const data = require('./lib/data');
 
 // scaffolding
 const app = {};
-app.config = {
-    port: 3000,
-};
+
+// to do
+
+data.update('test', 'newFile', { name: 'england', lan: 'eng' }, (err) => {
+    console.log(err);
+});
 
 // create server
-app.createserver = () => {
-    const server = http.createServer(app.handleReqRes);
-    server.listen(app.config.port, () => {
-        console.log(`listening to port ${app.config.port}`);
-        console.log('hello nandan');
+app.createServer = () => {
+    const server = http.createServer(HandleReqRes);
+    server.listen(environment.port, () => {
+        console.log(`listening to port ${environment.port}`);
     });
 };
-// handle request response
-app.handleReqRes = HandleReqRes;
-// start the serverapp.createserver();
-app.createserver();
+
+// start the server
+app.createServer();
