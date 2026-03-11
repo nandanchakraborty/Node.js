@@ -11,11 +11,16 @@ const data = require('./lib/data');
 // scaffolding
 const app = {};
 
-// to do
+// to do//
 
-data.update('test', 'newFile', { name: 'england', lan: 'eng' }, (err) => {
+// data.update('test', 'newFile', { name: 'england', lan: 'eng' }, (err) => {
+// console.log(err);
+// });
+/*
+data.delete('test', 'newFile', (err) => {
     console.log(err);
 });
+*/
 
 // create server
 app.createServer = () => {
