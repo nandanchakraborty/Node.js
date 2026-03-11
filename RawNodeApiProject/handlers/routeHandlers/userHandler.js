@@ -19,27 +19,29 @@ handler.userHandler = (requestProparties, callback) => {
 };
 handler._user = {};
 handler._user.post = (requestProparties, callback) => {
-    const firstName = typeof (requestProparties.body.firstName === 'string' &&
-    requestProparties.body.firstName.trim().length > 0
-        ? requestProparties.body.firstName
-        : false);
-    const lastName = typeof (requestProparties.body.lastName === 'string' &&
-    requestProparties.body.lastName.trim().length > 0
-        ? requestProparties.body.lastName
-        : false);
-    const phone = typeof (requestProparties.body.phone === 'string' &&
-    requestProparties.body.phone.trim().length === 11
-        ? requestProparties.body.phone
-        : false);
+    const firstName =        typeof requestProparties.body.firstName === 'string' &&
+        requestProparties.body.firstName.trim().length > 0
+            ? requestProparties.body.firstName
+            : false;
 
-    const password = typeof (requestProparties.body.password === 'string' &&
-    requestProparties.body.password.trim().length > 0
-        ? requestProparties.body.password
-        : false);
-    const tosAggrement = typeof (requestProparties.body.tosAggrement === 'boolean' &&
-    requestProparties.body.tosAggrement.trim().length > 0
-        ? requestProparties.body.tosAggrement
-        : false);
+    const lastName =        typeof requestProparties.body.lastName === 'string' &&
+        requestProparties.body.lastName.trim().length > 0
+            ? requestProparties.body.lastName
+            : false;
+
+    const phone =        typeof requestProparties.body.phone === 'string' &&
+        requestProparties.body.phone.trim().length === 11
+            ? requestProparties.body.phone
+            : false;
+
+    const password =        typeof requestProparties.body.password === 'string' &&
+        requestProparties.body.password.trim().length > 0
+            ? requestProparties.body.password
+            : false;
+
+    const tosAggrement =        typeof requestProparties.body.tosAggrement === 'boolean'
+            ? requestProparties.body.tosAggrement
+            : false;
 
     if (firstName && lastName && phone && password && tosAggrement) {
         // make sure that user doesnt exist
@@ -98,6 +100,99 @@ handler._user.get = (requestProparties, callback) => {
         });
     }
 };
-handler._user.put = (requestProparties, callback) => {};
-handler._user.delete = (requestProparties, callback) => {};
+handler._user.put = (requestProparties, callback) => {
+    const firstName = typeof (requestProparties.body.firstName === 'string' &&
+    requestProparties.body.firstName.trim().length > 0
+        ? requestProparties.body.firstName
+        : false);
+    const lastName = typeof (requestProparties.body.lastName === 'string' &&
+    requestProparties.body.lastName.trim().length > 0
+        ? requestProparties.body.lastName
+        : false);
+    const phone = typeof (requestProparties.body.phone === 'string' &&
+    requestProparties.body.phone.trim().length === 11
+        ? requestProparties.body.phone
+        : false);
+
+    const password = typeof (requestProparties.body.password === 'string' &&
+    requestProparties.body.password.trim().length > 0
+        ? requestProparties.body.password
+        : false);
+    if (phone) {
+        if (firstName || lastName || password) {
+            // lookup the user
+            data.read('user', phone, (err, uData) => {
+                const userData = { ...parseJSON(uData) };
+
+                if (!err && userData) {
+                    if (firstName) {
+                        userData.firstName = firstName;
+                    }
+                    if (lastName) {
+                        userData.lastName = lastName;
+                    }
+                    if (password) {
+                        userData.password = hash(password);
+                    }
+                    // store to database
+                    data.update('user', phone, userData, (err) => {
+                        if (!err) {
+                            callback(200, {
+                                message: 'user updated successfully',
+                            });
+                        } else {
+                            callback(500, {
+                                error: 'there was a problmen in server side',
+                            });
+                        }
+                    });
+                } else {
+                    callback(400, {
+                        error: 'you have a problem in your request',
+                    });
+                }
+            });
+        } else {
+            callback(400, {
+                error: 'you have problem in your req',
+            });
+        }
+    } else {
+        callback(400, {
+            error: 'invalid phone number,please try again',
+        });
+    }
+};
+handler._user.delete = (requestProparties, callback) => {
+    const phone = typeof (requestProparties.queryStringObject.phone === 'string' &&
+    requestProparties.queryStringObject.phone.trim().length === 11
+        ? requestProparties.queryStringObject.phone
+        : false);
+    if (phone) {
+        data.read('user', phone, (err, userData) => {
+            if (!err && userData) {
+                data.delete('user', phone, (err) => {
+                    if (!err) {
+                        callback(200, {
+                            error: 'user deleted successful',
+                        });
+                    } else {
+                        callback(500, {
+                            error: 'serverside error',
+                        });
+                    }
+                });
+            } else {
+                callback(500, {
+                    error: 'No such data available',
+                });
+            }
+        });
+    } else {
+        callback(400, {
+            error: 'No such data available',
+        });
+    }
+};
+
 module.exports = handler;
