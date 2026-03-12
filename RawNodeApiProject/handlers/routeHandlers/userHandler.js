@@ -7,6 +7,7 @@ const handler = {};
 const data = require('../../lib/data');
 const { hash } = require('../../helpers/utilities');
 const { parseJSON } = require('../../helpers/utilities');
+const tokenHandler = require('./tokenHandler');
 
 handler.userHandler = (requestProparties, callback) => {
     console.log(requestProparties);
@@ -17,34 +18,29 @@ handler.userHandler = (requestProparties, callback) => {
         callback(405);
     }
 };
+
 handler._user = {};
+
+// POST
 handler._user.post = (requestProparties, callback) => {
-    const firstName =        typeof requestProparties.body.firstName === 'string' &&
-        requestProparties.body.firstName.trim().length > 0
-            ? requestProparties.body.firstName
-            : false;
+    const firstName = typeof requestProparties.body.firstName === 'string';
+    requestProparties.body.firstName.trim().length > 0 ? requestProparties.body.firstName : false;
 
-    const lastName =        typeof requestProparties.body.lastName === 'string' &&
-        requestProparties.body.lastName.trim().length > 0
-            ? requestProparties.body.lastName
-            : false;
+    const lastName = typeof requestProparties.body.lastName === 'string';
+    requestProparties.body.lastName.trim().length > 0 ? requestProparties.body.lastName : false;
 
-    const phone =        typeof requestProparties.body.phone === 'string' &&
-        requestProparties.body.phone.trim().length === 11
-            ? requestProparties.body.phone
-            : false;
+    const phone = typeof requestProparties.body.phone === 'string';
+    requestProparties.body.phone.trim().length === 11 ? requestProparties.body.phone : false;
 
-    const password =        typeof requestProparties.body.password === 'string' &&
-        requestProparties.body.password.trim().length > 0
-            ? requestProparties.body.password
-            : false;
+    const password = typeof requestProparties.body.password === 'string';
+    requestProparties.body.password.trim().length > 0 ? requestProparties.body.password : false;
 
-    const tosAggrement =        typeof requestProparties.body.tosAggrement === 'boolean'
+    const tosAggrement =
+        typeof requestProparties.body.tosAggrement === 'boolean'
             ? requestProparties.body.tosAggrement
             : false;
 
     if (firstName && lastName && phone && password && tosAggrement) {
-        // make sure that user doesnt exist
         data.read('user', phone, (err, user) => {
             if (err) {
                 const userObject = {
@@ -54,6 +50,7 @@ handler._user.post = (requestProparties, callback) => {
                     password: hash(password),
                     tosAggrement,
                 };
+
                 data.create('user', phone, userObject, (err) => {
                     if (!err) {
                         callback(200, {
@@ -71,26 +68,37 @@ handler._user.post = (requestProparties, callback) => {
         });
     }
 };
+
+// GET
 handler._user.get = (requestProparties, callback) => {
-    // check if the phone number is valid or not
-    const phone = typeof (requestProparties.queryStringObject.phone === 'string' &&
+    const phone = typeof requestProparties.queryStringObject.phone === 'string';
     requestProparties.queryStringObject.phone.trim().length === 11
         ? requestProparties.queryStringObject.phone
-        : false);
+        : false;
+
     if (phone) {
-        // look up the user
-        data.read('user', phone, (err, u) => {
-            const user = { ...parseJSON(u) };
-            /*
-            {name : 'jssh',age = 23,gender :'male'}
-            sigle level user .spread operator use to parse
-            */
-            if (!err && user) {
-                delete user.password;
-                callback(200, user);
+        const token =
+            typeof requestProparties.headersObject.token === 'string'
+                ? requestProparties.headersObject.token
+                : false;
+
+        tokenHandler._token.verify(token, phone, (tokenId) => {
+            if (tokenId) {
+                data.read('user', phone, (err, u) => {
+                    const user = { ...parseJSON(u) };
+
+                    if (!err && user) {
+                        delete user.password;
+                        callback(200, user);
+                    } else {
+                        callback(404, {
+                            error: 'request error',
+                        });
+                    }
+                });
             } else {
-                callback(404, {
-                    error: 'request error',
+                callback(403, {
+                    error: 'authentication failed',
                 });
             }
         });
@@ -100,55 +108,66 @@ handler._user.get = (requestProparties, callback) => {
         });
     }
 };
-handler._user.put = (requestProparties, callback) => {
-    const firstName = typeof (requestProparties.body.firstName === 'string' &&
-    requestProparties.body.firstName.trim().length > 0
-        ? requestProparties.body.firstName
-        : false);
-    const lastName = typeof (requestProparties.body.lastName === 'string' &&
-    requestProparties.body.lastName.trim().length > 0
-        ? requestProparties.body.lastName
-        : false);
-    const phone = typeof (requestProparties.body.phone === 'string' &&
-    requestProparties.body.phone.trim().length === 11
-        ? requestProparties.body.phone
-        : false);
 
-    const password = typeof (requestProparties.body.password === 'string' &&
-    requestProparties.body.password.trim().length > 0
-        ? requestProparties.body.password
-        : false);
+// PUT
+handler._user.put = (requestProparties, callback) => {
+    const firstName = typeof requestProparties.body.firstName === 'string';
+    requestProparties.body.firstName.trim().length > 0 ? requestProparties.body.firstName : false;
+
+    const lastName = typeof requestProparties.body.lastName === 'string';
+    requestProparties.body.lastName.trim().length > 0 ? requestProparties.body.lastName : false;
+
+    const phone = typeof requestProparties.body.phone === 'string';
+    requestProparties.body.phone.trim().length === 11 ? requestProparties.body.phone : false;
+
+    const password = typeof requestProparties.body.password === 'string';
+    requestProparties.body.password.trim().length > 0 ? requestProparties.body.password : false;
+
     if (phone) {
         if (firstName || lastName || password) {
-            // lookup the user
-            data.read('user', phone, (err, uData) => {
-                const userData = { ...parseJSON(uData) };
+            const token =
+                typeof requestProparties.headersObject.token === 'string'
+                    ? requestProparties.headersObject.token
+                    : false;
 
-                if (!err && userData) {
-                    if (firstName) {
-                        userData.firstName = firstName;
-                    }
-                    if (lastName) {
-                        userData.lastName = lastName;
-                    }
-                    if (password) {
-                        userData.password = hash(password);
-                    }
-                    // store to database
-                    data.update('user', phone, userData, (err) => {
-                        if (!err) {
-                            callback(200, {
-                                message: 'user updated successfully',
+            tokenHandler._token.verify(token, phone, (tokenId) => {
+                if (tokenId) {
+                    data.read('user', phone, (err, uData) => {
+                        const userData = { ...parseJSON(uData) };
+
+                        if (!err && userData) {
+                            if (firstName) {
+                                userData.firstName = firstName;
+                            }
+
+                            if (lastName) {
+                                userData.lastName = lastName;
+                            }
+
+                            if (password) {
+                                userData.password = hash(password);
+                            }
+
+                            data.update('user', phone, userData, (err) => {
+                                if (!err) {
+                                    callback(200, {
+                                        message: 'user updated successfully',
+                                    });
+                                } else {
+                                    callback(500, {
+                                        error: 'there was a problmen in server side',
+                                    });
+                                }
                             });
                         } else {
-                            callback(500, {
-                                error: 'there was a problmen in server side',
+                            callback(400, {
+                                error: 'you have a problem in your request',
                             });
                         }
                     });
                 } else {
-                    callback(400, {
-                        error: 'you have a problem in your request',
+                    callback(403, {
+                        error: 'authentication failed',
                     });
                 }
             });
@@ -163,28 +182,44 @@ handler._user.put = (requestProparties, callback) => {
         });
     }
 };
+
+// DELETE
 handler._user.delete = (requestProparties, callback) => {
-    const phone = typeof (requestProparties.queryStringObject.phone === 'string' &&
+    const phone = typeof requestProparties.queryStringObject.phone === 'string';
     requestProparties.queryStringObject.phone.trim().length === 11
         ? requestProparties.queryStringObject.phone
-        : false);
+        : false;
+
     if (phone) {
-        data.read('user', phone, (err, userData) => {
-            if (!err && userData) {
-                data.delete('user', phone, (err) => {
-                    if (!err) {
-                        callback(200, {
-                            error: 'user deleted successful',
+        const token =
+            typeof requestProparties.headersObject.token === 'string'
+                ? requestProparties.headersObject.token
+                : false;
+
+        tokenHandler._token.verify(token, phone, (tokenId) => {
+            if (tokenId) {
+                data.read('user', phone, (err, userData) => {
+                    if (!err && userData) {
+                        data.delete('user', phone, (err) => {
+                            if (!err) {
+                                callback(200, {
+                                    error: 'user deleted successful',
+                                });
+                            } else {
+                                callback(500, {
+                                    error: 'serverside error',
+                                });
+                            }
                         });
                     } else {
                         callback(500, {
-                            error: 'serverside error',
+                            error: 'No such data available',
                         });
                     }
                 });
             } else {
-                callback(500, {
-                    error: 'No such data available',
+                callback(403, {
+                    error: 'authentication failed',
                 });
             }
         });
