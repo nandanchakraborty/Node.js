@@ -8,7 +8,7 @@ const lib = {};
 lib.baseDir = path.join(__dirname, '/../.data/');
 
 // write data to file
-lib.create = function (dir, file, data, callback) {
+lib.create = (dir, file, data, callback) => {
     fs.open(`${lib.baseDir + dir}/${file}.json`, 'wx', (err, fileDescriptor) => {
         if (!err && fileDescriptor) {
             // convert data to string
@@ -74,6 +74,19 @@ lib.update = (dir, file, data, callback) => {
             });
         } else {
             callback('Error updating: file may not exist');
+        }
+    });
+};
+
+// delete existing file
+
+lib.delete = (dir, file, callback) => {
+    // unlink file
+    fs.unlink(`${lib.baseDir + dir}/${file}.json`, (err) => {
+        if (!err) {
+            callback(false);
+        } else {
+            callback('error deleting file');
         }
     });
 };
