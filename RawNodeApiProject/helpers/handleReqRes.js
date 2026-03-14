@@ -5,7 +5,7 @@ const { StringDecoder } = require('string_decoder');
 const url = require('url');
 const routes = require('../routes');
 const { notFoundHandler } = require('../handlers/routeHandlers/notFoundHandler');
-
+const { parseJSON } = require('./utilities');
 // scafolding
 const handler = {};
 
@@ -24,21 +24,19 @@ handler.HandleReqRes = (req, res) => {
     req.on('data', (buffer) => {
         realData += decoder.write(buffer);
     });
-
+    const chosenHandler = routes[trimedPath] ? routes[trimedPath] : notFoundHandler;
+    const requestProparties = {
+        parsedUrl,
+        path,
+        trimedPath,
+        method,
+        queryStringObject,
+        headersObject,
+        body: realData,
+    };
     req.on('end', () => {
         realData += decoder.end();
-
-        const requestProparties = {
-            parsedUrl,
-            path,
-            trimedPath,
-            method,
-            queryStringObject,
-            headersObject,
-            body: realData,
-        };
-
-        const chosenHandler = routes[trimedPath] ? routes[trimedPath] : notFoundHandler;
+        requestProparties.body = parseJSON(realData);
         chosenHandler(requestProparties, (statusCode, payload) => {
             const finalStatusCode = typeof statusCode === 'number' ? statusCode : 500;
 
