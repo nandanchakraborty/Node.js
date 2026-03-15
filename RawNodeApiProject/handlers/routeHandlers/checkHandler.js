@@ -42,14 +42,15 @@ handler._check.post = (requestProparties, callback) => {
         : false;
 
     const timeoutSecond = typeof requestProparties.body.timeoutSecond === 'number';
-    requestProparties.body.timeoutSecond % 1 === 0 &&
-    requestProparties.body.timeoutSecond >= 1 &&
-    requestProparties.body.timeoutSecond <= 5
+    requestProparties.body.timeoutSecond % 1 === 0
+    && requestProparties.body.timeoutSecond >= 1
+    && requestProparties.body.timeoutSecond <= 5
         ? requestProparties.body.timeoutSecond
         : false;
 
     if (protocol && mehtod && successCode && timeoutSecond) {
-        const token =            typeof requestProparties.headersObject.token === 'string'
+        const token =
+            typeof requestProparties.headersObject.token === 'string'
                 ? requestProparties.headersObject.token
                 : false;
 
@@ -64,7 +65,8 @@ handler._check.post = (requestProparties, callback) => {
                         tokenHandler._token.verify(token, userPhone, (tokeIsValid) => {
                             if (tokeIsValid) {
                                 const userObject = parseJSON(userData);
-                                const userChecks =                                    typeof userObject.checks === 'object' && userObject.checks
+                                const userChecks =
+                                    typeof userObject.checks === 'object' && userObject.checks
                                         ? userObject.checks
                                         : [];
 
@@ -128,15 +130,16 @@ handler._check.post = (requestProparties, callback) => {
 
 // GET
 handler._check.get = (requestProparties, callback) => {
-    const id = typeof (requestProparties.queryStringObject.id === 'string' &&
-    requestProparties.queryStringObject.id.trim().length === 20
+    const id = typeof (requestProparties.queryStringObject.id === 'string'
+    && requestProparties.queryStringObject.id.trim().length === 20
         ? requestProparties.queryStringObject.id
         : false);
     if (id) {
         // lookup the check
         data.read('checks', id, (err, checkData) => {
             if (!err && checkData) {
-                const token =                    typeof requestProparties.headersObject.token === 'string'
+                const token =
+                    typeof requestProparties.headersObject.token === 'string'
                         ? requestProparties.headersObject.token
                         : false;
 
@@ -151,7 +154,7 @@ handler._check.get = (requestProparties, callback) => {
                                 error: 'authentication failure',
                             });
                         }
-                    },
+                    }
                 );
             } else {
                 callback(400, {
@@ -168,8 +171,8 @@ handler._check.get = (requestProparties, callback) => {
 
 // PUT
 handler._check.put = (requestProparties, callback) => {
-    const id = typeof (requestProparties.body.id === 'string' &&
-    requestProparties.body.id.trim().length === 20
+    const id = typeof (requestProparties.body.id === 'string'
+    && requestProparties.body.id.trim().length === 20
         ? requestProparties.body.id
         : false);
 
@@ -194,9 +197,9 @@ handler._check.put = (requestProparties, callback) => {
         : false;
 
     const timeoutSecond = typeof requestProparties.body.timeoutSecond === 'number';
-    requestProparties.body.timeoutSecond % 1 === 0 &&
-    requestProparties.body.timeoutSecond >= 1 &&
-    requestProparties.body.timeoutSecond <= 5
+    requestProparties.body.timeoutSecond % 1 === 0
+    && requestProparties.body.timeoutSecond >= 1
+    && requestProparties.body.timeoutSecond <= 5
         ? requestProparties.body.timeoutSecond
         : false;
 
@@ -204,8 +207,7 @@ handler._check.put = (requestProparties, callback) => {
         if (protocol || url || method || successCode || timeoutSecond) {
             data.read('checks', id, (err1, checkData) => {
                 const checkObject = parseJSON(checkData);
-                const token =
-                    typeof requestProparties.headersObject.token === 'string'
+                const token =                    typeof requestProparties.headersObject.token === 'string'
                         ? requestProparties.headersObject.token
                         : false;
 
@@ -256,6 +258,98 @@ handler._check.put = (requestProparties, callback) => {
 };
 
 // DELETE
-handler._check.delete = (requestProparties, callback) => {};
+handler._check.delete = (requestProparties, callback) => {
+    const id = typeof (requestProparties.queryStringObject.id === 'string'
+    && requestProparties.queryStringObject.id.trim().length === 20
+        ? requestProparties.queryStringObject.id
+        : false);
+    if (id) {
+        // lookup the check
+        data.read('checks', id, (err, checkData) => {
+            if (!err && checkData) {
+                const token =
+                    typeof requestProparties.headersObject.token === 'string'
+                        ? requestProparties.headersObject.token
+                        : false;
+
+                tokenHandler._token.verify(
+                    token,
+                    parseJSON(checkData).userPhone,
+                    (tokenIsValid) => {
+                        if (tokenIsValid) {
+                            // delete the check data
+                            data.delete('checks', id, (err1) => {
+                                if (!err1) {
+                                    data.read(
+                                        'user',
+                                        parseJSON(checkData).userPhone,
+                                        (err2, userData) => {
+                                            const userObject = parseJSON(userData);
+
+                                            if (!err2 && userData) {
+                                                const userChecks =                                                    typeof userObject.checks === 'object' &&
+                                                    userObject.check instanceof Array
+                                                        ? userObject.checks
+                                                        : [];
+
+                                                const checkPosition = userChecks.indexOf(id);
+                                                if (checkPosition > -1) {
+                                                    userChecks.splice(checkPosition, 1);
+                                                    // resave the user data
+                                                    userObject.checks = userChecks;
+                                                    data.update(
+                                                        'user',
+                                                        userObject.phone,
+                                                        userObject,
+                                                        (err3) => {
+                                                            if (!err3) {
+                                                                callback(200, {
+                                                                    message:
+                                                                        'checks delete succcessfull',
+                                                                });
+                                                            } else {
+                                                                callback(500, {
+                                                                    error: 'server side probolem',
+                                                                });
+                                                            }
+                                                        }
+                                                    );
+                                                } else {
+                                                    callback(500, {
+                                                        error: 'checks id you are trying to remove is not found',
+                                                    });
+                                                }
+                                            } else {
+                                                callback(500, {
+                                                    error: 'serverside error',
+                                                });
+                                            }
+                                        }
+                                    );
+                                } else {
+                                    callback(500, {
+                                        error: 'serverside problem',
+                                    });
+                                }
+                            });
+                        } else {
+                            callback(403, {
+                                error: 'authentication failure',
+                            });
+                        }
+                    }
+                );
+            } else {
+                callback(400, {
+                    error: 'you have a problem in your request',
+                });
+            }
+        });
+    } else {
+        callback(400, {
+            error: 'you have a problem in your request',
+        });
+    }
+};
 
 module.exports = handler;
