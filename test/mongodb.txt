@@ -1,0 +1,8 @@
+ docker start mongodb
+ docker ps
+ db.products.insertOne({})
+ db.products.find().pretty()
+ db.products.find({active:"true"}).pretty()
+ db.products.find({active:"true"},{active:0}).pretty()
+ db.products.find({active:"true"}).pretty().limit(1)
+ db.products.find({active:"true"}).pretty().limit(1).skip(1)
