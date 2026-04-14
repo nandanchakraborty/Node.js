@@ -21,13 +21,10 @@ A simple and clean Todo API built using Node.js, Express, and MongoDB. This proj
 project-root/
 │
 ├── index.js
-├── models/
-│   └── todoSchema.js
 ├── handlers/
 │   └── todoHandler.js
-├── routes/
-│   └── todoRoutes.js
-├── package.json
+├── schema/
+│   └── schema.js
 └── README.md
 ```
 
