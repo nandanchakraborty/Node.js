@@ -47,3 +47,30 @@ app.use((err, req, res, next) => {
 app.listen(3000, () => {
     console.log('listening on port 3000');
 });
+
+/*
+IMPORTANT NOTES ABOUT ERROR HANDLING AND MIDDLEWARE Documentation:
+
+1.Errors that occur in synchronous code inside
+ route handlers and middleware require no extra work. If synchronous code
+throws an error, then Express will catch and process it. For example:
+
+app.get('/', (req, res) => {
+  throw new Error('BROKEN') // Express will catch this on its own.
+})
+
+2.For errors returned from asynchronous functions
+invoked by route handlers and middleware, you must
+ pass them to the next() function, where Express will catch and process them. For example:
+
+app.get('/', (req, res, next) => {
+  fs.readFile('/file-does-not-exist', (err, data) => {
+    if (err) {
+      next(err) // Pass errors to Express.
+    } else {
+      res.send(data)
+    }
+  })
+})
+
+*/
