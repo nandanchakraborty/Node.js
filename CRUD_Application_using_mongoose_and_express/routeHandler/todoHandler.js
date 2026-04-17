@@ -25,6 +25,40 @@ router.get('/', async (req, res) => {
         });
     }
 });
+// get active todos from instance method
+router.get('/active', async (req, res) => {
+    try {
+        const todo = new Todo(); // model ke diye document banano
+        const data = await todo.findActive(); // oi document diye instance method ke call deoa
+        res.status(200).json({
+            data,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+// find by ex by static method.
+router.get('/ex', async (req, res) => {
+    try {
+        const data = await Todo.findByExp();
+        res.status(200).json({
+            data,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+// find by langulage in query helper
+router.get('/langulage', async (req, res) => {
+    try {
+        const data = await Todo.find().byLanguage('Mongoose');
+        res.status(200).json({
+            data,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
 
 // get a todo by id
 

@@ -15,5 +15,30 @@ const todoSchema = mongoose.Schema({
         default: Date.now,
     },
 });
+// mongoose instance method
+todoSchema.methods = {
+    findActive() {
+        return mongoose.model('Todo').find({ status: 'active' });
+    },
+};
+
+// mongoose static method
+todoSchema.statics = {
+    findByExp() {
+        return this.find({ title: /ex/i }); // its a static method of this model.so we can use "this"
+    },
+};
+
+// mongoose query helper
+todoSchema.query = {
+    byLangulage(language) {
+        return this.find({ title: new RegExp(language, 'i') });
+    },
+};
+
+/* difference between instance and static method :
+1.in intance method ,u have to make an intance .then by this document,
+u call the instance method but in the static method,u can call it by class name
+*/
 
 module.exports = todoSchema;
