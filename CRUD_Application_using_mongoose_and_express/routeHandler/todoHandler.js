@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const checkLogin = require('./middleware/checkLogin');
 
 const router = express.Router();
 const todoSchema = require('../schema/todoSchema');
@@ -10,7 +11,8 @@ const Todo = new mongoose.model('Todo', todoSchema);
 
 // get all the todo
 
-router.get('/', async (req, res) => {
+router.get('/', checkLogin, async (req, res) => {
+    // created a middleware to authenticate this route named : checklogin
     try {
         const data = await Todo.find({ status: 'active' });
 
@@ -21,7 +23,7 @@ router.get('/', async (req, res) => {
     } catch (err) {
         console.log('FULL ERROR:', err); // 👈 see everything
         res.status(500).json({
-            error: err.message,
+            message: err.message,
         });
     }
 });
