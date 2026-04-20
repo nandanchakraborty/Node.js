@@ -1,11 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const checkLogin = require('./middleware/checkLogin');
+const checkLogin = require('../middleware/checkLogin');
 
 const router = express.Router();
 const todoSchema = require('../schema/todoSchema');
+const userSchema = require('../schema/userSchema');
 
 const Todo = new mongoose.model('Todo', todoSchema);
+const User = new mongoose.model('User', userSchema);
 // to make ODM ,u have to make a schema then ,create a model,
 // named it in singular form and pass the schema
 
@@ -14,10 +16,11 @@ const Todo = new mongoose.model('Todo', todoSchema);
 router.get('/', checkLogin, async (req, res) => {
     // created a middleware to authenticate this route named : checklogin
     try {
-        const data = await Todo.find({ status: 'active' });
+        const data = await Todo.find({}).populate('user'); // mergeing with user collection to get user details using populate('column name(in todos), 'param1 param2')
 
-        console.log(data);
+        // console.log(data);
         res.status(200).json({
+            data,
             message: 'todos fetched successfully',
         });
     } catch (err) {
@@ -86,10 +89,23 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', checkLogin, async (req, res) => {
+    const newTodo = new Todo({
+        // making relational data with todos and userid,
+        ...req.body,
+        user: req.userId, // getting the userid from decoded checklogin
+    });
     try {
-        const newTodo = new Todo(req.body);
-        await newTodo.save();
+        // console.log(req.userId);
+        const todo = await newTodo.save();
+        await User.updateOne(
+            {
+                _id: req.userId,
+            },
+            {
+                $push: { todos: todo._id },
+            },
+        );
 
         res.status(200).json({
             message: 'todo inserted successfully',
