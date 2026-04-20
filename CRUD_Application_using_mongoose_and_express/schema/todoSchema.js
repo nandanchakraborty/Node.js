@@ -14,6 +14,12 @@ const todoSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    // making relational data
+    user: {
+        type: mongoose.Types.ObjectId,
+        // evert collection has unique mongoose obj _id .thats getting it
+        ref: 'User', // getting it from user model
+    },
 });
 // mongoose instance method
 todoSchema.methods = {
